@@ -89,8 +89,13 @@ Não é necessário servidor. Basta abrir o `index.html` diretamente no navegado
 ```
 Abrir com: Google Chrome / Firefox / Edge
 ```
-
 > Para imagens locais (pasta `assets/img/`), o `html2canvas` captura sem restrições de CORS por se tratar de arquivos do próprio sistema.
+
+OU
+
+### 1. Acesse o projeto pelo site oficial oferecido pelo github pages:
+
+[FliSol - Crachá. Site Oficial!](https://dhiogofrutuoso.github.io/FliSol-Cracha/)
 
 ---
 
