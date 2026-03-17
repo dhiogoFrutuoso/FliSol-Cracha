@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Customizer</title>
+
+  <!--
+    =====================================================
+    CARD CUSTOMIZER
+    -----------------------------------------------------
+    IMAGENS GEEK — CAMINHOS LOCAIS
+      As imagens da aba Geek/Sci-Fi são carregadas a partir
+      de arquivos locais. Crie uma pasta "imagens" no mesmo
+      diretório deste HTML e coloque suas imagens lá.
+
+      Estrutura esperada:
+        /card-customizer.html
+        /imagens/
+          one-piece.jpg
+          naruto.jpg
+          dragon-ball.jpg
+          bleach.jpg
+          demon-slayer.jpg
+          (suas outras imagens...)
+
+      Como imagens locais não têm restrição de CORS,
+      o html2canvas consegue capturar e salvar sem proxy.
+
+    LAYOUT
+      - Preview do card maior (coluna esquerda)
+      - Painel de controles com scroll interno (coluna direita)
+        → todos os painéis visíveis sem scroll da página
+    =====================================================
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@400;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Bebas+Neue&family=Josefin+Sans:wght@300;400;700&family=Pacifico&family=Bitter:wght@400;600&family=Rajdhani:wght@400;600&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&family=Cinzel:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- =====================================================
+       COLUNA ESQUERDA — preview grande do card
+  ====================================================== -->
+  <div class="preview-area">
+    <div id="card" style="--overlay-opacity:0;">
+      <div class="deco"  id="deco"></div>
+      <div class="deco2" id="deco2"></div>
+      <div class="card-top">
+        <span class="card-icon" id="cicon">✦</span>
+        <span class="card-tag"  id="ctag" style="background:rgba(255,255,255,0.2);color:#fff;">IFCE</span>
+      </div>
+      <div class="card-bottom">
+        <div class="card-name"  id="cname"  style="color:#fff;">Seu Nome</div>
+        <div class="card-title" id="ctitle" style="color:#fff;">Título do Card</div>
+        <div class="card-sub"   id="csub"   style="color:#fff;">subtítulo · detalhes</div>
+      </div>
+    </div>
+
+    <div class="loading-indicator" id="loading-indicator">
+      <div class="spinner"></div>
+      <span>Carregando imagem...</span>
+    </div>
+
+    <p class="preview-label">pré-visualização em tempo real</p>
+  </div>
+
+  <!-- =====================================================
+       COLUNA DIREITA — sidebar com scroll interno
+  ====================================================== -->
+  <div class="sidebar">
+
+    <!-- Conteúdo textual -->
+    <div class="panel">
+      <div class="panel-title">Conteúdo</div>
+      <div class="field"><label for="f-icon">Ícone / emoji (Pressione win + . para ver os emojis)</label><input type="text" id="f-icon" value="✦" maxlength="4"/></div>
+      <div class="field"><label for="f-tag">Instituição de Ensino ou Empresa</label><input type="text" id="f-tag" value="IFCE"/></div>
+      <div class="field"><label for="f-name">Nome</label><input type="text" id="f-name" value="Seu Nome"/></div>
+      <div class="field"><label for="f-title">Título principal</label><input type="text" id="f-title" value="Título do Card"/></div>
+      <div class="field"><label for="f-sub">Subtítulo</label><input type="text" id="f-sub" value="subtítulo · detalhes"/></div>
+    </div>
+
+    <!-- Fundo: Cores / Imagens -->
+    <div class="panel">
+      <div class="panel-title">Fundo</div>
+      <div class="bg-section-tabs">
+        <button class="bg-section-btn active" onclick="switchBgSection('cores',this)">🎨 Cores</button>
+        <button class="bg-section-btn"        onclick="switchBgSection('imagens',this)">🖼 Imagens</button>
+      </div>
+
+      <div class="bg-section visible" id="section-cores">
+        <div class="tab-row"   id="color-tab-row"></div>
+        <div class="color-row" id="color-row"></div>
+      </div>
+
+      <div class="bg-section" id="section-imagens">
+        <div class="tab-row"    id="img-tab-row"></div>
+        <div class="thumb-grid" id="thumb-grid"></div>
+        <div class="slider-row">
+          <label for="overlay-slider">Escurecimento</label>
+          <input type="range" id="overlay-slider" min="0" max="85" value="45" step="5"/>
+          <span class="slider-val" id="overlay-val">45%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fonte -->
+    <div class="panel">
+      <div class="panel-title">Fonte</div>
+      <div class="font-row" id="font-row"></div>
+    </div>
+
+    <!-- Proporção -->
+    <div class="panel">
+      <div class="panel-title">Proporção</div>
+      <div class="layout-row">
+        <div class="layout-btn active" onclick="setLayout('wide',this)">Wide</div>
+        <div class="layout-btn"        onclick="setLayout('square',this)">Square</div>
+        <div class="layout-btn"        onclick="setLayout('tall',this)">Tall</div>
+      </div>
+    </div>
+
+    <!-- Botão fixo no fundo da sidebar -->
+    <div class="dl-wrap">
+      <button class="dl-btn" id="dl-btn" onclick="downloadCard()">
+        Baixar como imagem ↓
+      </button>
+    </div>
+
+  </div><!-- /sidebar -->
+</div><!-- /wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+
+  /* =====================================================
+     DADOS — PALETAS DE CORES
+  ===================================================== */
+  const PALETTE_CATEGORIES = [
+    {
+      id: "classicas", label: "Clássicas",
+      palettes: [
+        { name: "Noite Estrelada", bg: "#1a1a2e", d: "#7b5ea7", d2: "#4a90d9" },
+        { name: "Oceano Profundo", bg: "#0f3460", d: "#e94560", d2: "#16213e" },
+        { name: "Grafite",         bg: "#2d3436", d: "#fd79a8", d2: "#74b9ff" },
+        { name: "Lilás Elétrico",  bg: "#6c5ce7", d: "#a29bfe", d2: "#fd79a8" },
+        { name: "Esmeralda",       bg: "#00b894", d: "#55efc4", d2: "#00cec9" },
+        { name: "Rubi",            bg: "#d63031", d: "#ff7675", d2: "#fdcb6e" },
+        { name: "Índigo",          bg: "#2c2c54", d: "#706fd3", d2: "#40407a" },
+        { name: "Âmbar",           bg: "#f8b739", d: "#ffffff", d2: "#e17055" },
+        { name: "Carvão",          bg: "#1e272e", d: "#485460", d2: "#808e9b" },
+        { name: "Orquídea",        bg: "#833471", d: "#e056fd", d2: "#ffeaa7" },
+      ],
+    },
+    {
+      id: "animes", label: "Animes",
+      palettes: [
+        { name: "Naruto",           bg: "#c45c0a", d: "#f4a623", d2: "#1a2a6c" },
+        { name: "Dragon Ball",      bg: "#f5a623", d: "#fff176", d2: "#e65100" },
+        { name: "Attack on Titan",  bg: "#2e4a1e", d: "#6aaa4a", d2: "#8b4513" },
+        { name: "Demon Slayer",     bg: "#1a1a2e", d: "#c0392b", d2: "#27ae60" },
+        { name: "One Piece",        bg: "#0d47a1", d: "#f9ca24", d2: "#c0392b" },
+        { name: "Evangelion",       bg: "#4a0066", d: "#7fff00", d2: "#ff6600" },
+        { name: "Sailor Moon",      bg: "#c2185b", d: "#f8bbd0", d2: "#1565c0" },
+        { name: "Jujutsu Kaisen",   bg: "#1a0033", d: "#9c27b0", d2: "#e0e0e0" },
+        { name: "My Hero Academia", bg: "#1b5e20", d: "#69f0ae", d2: "#b71c1c" },
+        { name: "Death Note",       bg: "#0a0a0a", d: "#b71c1c", d2: "#f5f5f5" },
+      ],
+    },
+    {
+      id: "jogos", label: "Jogos",
+      palettes: [
+        { name: "Zelda",          bg: "#1b5e20", d: "#fdd835", d2: "#6d4c41" },
+        { name: "Cyberpunk 2077", bg: "#0d0d0d", d: "#f9e11e", d2: "#00e5ff" },
+        { name: "Pokémon",        bg: "#cc0000", d: "#ffffff", d2: "#3b4cca" },
+        { name: "Dark Souls",     bg: "#1c1208", d: "#8b6914", d2: "#4a4a4a" },
+        { name: "God of War",     bg: "#1a0000", d: "#cc2200", d2: "#888888" },
+        { name: "Minecraft",      bg: "#3c5a26", d: "#6aaa3a", d2: "#7d5524" },
+        { name: "Final Fantasy",  bg: "#0d2350", d: "#4fc3f7", d2: "#ffd700" },
+        { name: "The Witcher",    bg: "#1a0d2e", d: "#c8a000", d2: "#8b0000" },
+        { name: "Mega Man",       bg: "#1565c0", d: "#90caf9", d2: "#607d8b" },
+        { name: "Street Fighter", bg: "#003087", d: "#00bfff", d2: "#cc0000" },
+      ],
+    },
+    {
+      id: "series", label: "Séries/Filmes",
+      palettes: [
+        { name: "Marvel",          bg: "#b71c1c", d: "#ffd600", d2: "#1565c0" },
+        { name: "Star Wars",       bg: "#0d0d0d", d: "#1565c0", d2: "#d32f2f" },
+        { name: "Harry Potter",    bg: "#7b0000", d: "#ffd600", d2: "#4a0000" },
+        { name: "Batman",          bg: "#0d0d0d", d: "#f9a825", d2: "#424242" },
+        { name: "Stranger Things", bg: "#1a0000", d: "#cc0000", d2: "#0d47a1" },
+        { name: "Breaking Bad",    bg: "#0d2b36", d: "#5bc8e8", d2: "#8b6914" },
+        { name: "Game of Thrones", bg: "#1a1200", d: "#cc0000", d2: "#c8a000" },
+        { name: "Doctor Who",      bg: "#003153", d: "#0088cc", d2: "#ffd700" },
+      ],
+    },
+    {
+      id: "geek-cores", label: "Clássicos Geek",
+      palettes: [
+        { name: "Matrix",         bg: "#0d0d0d", d: "#00ff41", d2: "#003b00" },
+        { name: "Tron",           bg: "#000814", d: "#00b4d8", d2: "#0077b6" },
+        { name: "Blade Runner",   bg: "#120a1a", d: "#ff6600", d2: "#6600cc" },
+        { name: "Dune",           bg: "#3e2a00", d: "#c8a000", d2: "#7a5c00" },
+        { name: "Terminator",     bg: "#1a0000", d: "#ff0000", d2: "#555555" },
+        { name: "Interstellar",   bg: "#050a1a", d: "#aaddff", d2: "#ffffff" },
+        { name: "Fallout",        bg: "#1a2000", d: "#9acd32", d2: "#8b7355" },
+        { name: "Ghost in Shell", bg: "#0a0a1a", d: "#7b68ee", d2: "#c0c0c0" },
+      ],
+    },
+  ];
+
+
+  /* =====================================================
+     DADOS — IMAGENS GEEK (CAMINHOS LOCAIS)
+     -----------------------------------------------------
+     Coloque suas imagens na pasta "imagens/" ao lado
+     deste arquivo HTML. Depois edite os caminhos abaixo.
+
+     Estrutura de pastas esperada:
+       card-customizer.html
+       imagens/
+         one-piece.jpg
+         naruto.jpg
+         dragon-ball.jpg
+         bleach.jpg
+         demon-slayer.jpg
+
+     Cada objeto DEVE ter exatamente:
+       id       → string única (não repita)
+       name     → nome exibido na thumbnail
+       url      → caminho relativo para a imagem
+                  ex: "./imagens/one-piece.jpg"
+                  ex: "./imagens/minha-imagem.png"
+       thumbUrl → pode ser igual a url (mesma imagem)
+                  ou uma versão menor se tiver
+
+     Para ADICIONAR: copie um objeto e mude os campos
+     Para REMOVER:   apague o objeto inteiro
+     O site atualiza automaticamente.
+  ===================================================== */
+  const GEEK_IMAGES = [
+    {
+      id:       "gk01",
+      name:     "One Piece",
+      url:      "./assets/img/one-piece.png",
+      thumbUrl: "./assets/img/one-piece.png",
+    },
+    /*
+      ── Adicione mais imagens aqui ────────────────────
+      {
+        id:       "gk06",
+        name:     "Nome da Imagem",
+        url:      "./imagens/nome-do-arquivo.jpg",
+        thumbUrl: "./imagens/nome-do-arquivo.jpg",
+      },
+    */
+  ];
+
+
+  /* =====================================================
+     DADOS — CATEGORIAS DE IMAGENS (Picsum — CORS ok)
+  ===================================================== */
+  const IMAGE_CATEGORIES = [
+    {
+      id: "natureza", label: "Natureza",
+      images: [
+        { id:"n01", name:"Floresta",  url:"https://picsum.photos/id/15/800/600",   thumbUrl:"https://picsum.photos/id/15/120/80"   },
+        { id:"n02", name:"Montanha",  url:"https://picsum.photos/id/29/800/600",   thumbUrl:"https://picsum.photos/id/29/120/80"   },
+        { id:"n03", name:"Oceano",    url:"https://picsum.photos/id/1001/800/600", thumbUrl:"https://picsum.photos/id/1001/120/80" },
+        { id:"n04", name:"Aurora",    url:"https://picsum.photos/id/452/800/600",  thumbUrl:"https://picsum.photos/id/452/120/80"  },
+        { id:"n05", name:"Deserto",   url:"https://picsum.photos/id/239/800/600",  thumbUrl:"https://picsum.photos/id/239/120/80"  },
+        { id:"n06", name:"Cachoeira", url:"https://picsum.photos/id/136/800/600",  thumbUrl:"https://picsum.photos/id/136/120/80"  },
+      ],
+    },
+    {
+      id: "cidade", label: "Cidade",
+      images: [
+        { id:"c01", name:"Skyline",      url:"https://picsum.photos/id/1040/800/600", thumbUrl:"https://picsum.photos/id/1040/120/80" },
+        { id:"c02", name:"Neon noturno", url:"https://picsum.photos/id/1036/800/600", thumbUrl:"https://picsum.photos/id/1036/120/80" },
+        { id:"c03", name:"Ponte",        url:"https://picsum.photos/id/338/800/600",  thumbUrl:"https://picsum.photos/id/338/120/80"  },
+        { id:"c04", name:"Rua molhada",  url:"https://picsum.photos/id/378/800/600",  thumbUrl:"https://picsum.photos/id/378/120/80"  },
+        { id:"c05", name:"Arquitetura",  url:"https://picsum.photos/id/318/800/600",  thumbUrl:"https://picsum.photos/id/318/120/80"  },
+        { id:"c06", name:"Metrô",        url:"https://picsum.photos/id/96/800/600",   thumbUrl:"https://picsum.photos/id/96/120/80"   },
+      ],
+    },
+    {
+      id: "espaco", label: "Espaço",
+      images: [
+        { id:"e01", name:"Galáxia",    url:"https://picsum.photos/id/1057/800/600", thumbUrl:"https://picsum.photos/id/1057/120/80" },
+        { id:"e02", name:"Nebulosa",   url:"https://picsum.photos/id/859/800/600",  thumbUrl:"https://picsum.photos/id/859/120/80"  },
+        { id:"e03", name:"Lua cheia",  url:"https://picsum.photos/id/924/800/600",  thumbUrl:"https://picsum.photos/id/924/120/80"  },
+        { id:"e04", name:"Via Láctea", url:"https://picsum.photos/id/911/800/600",  thumbUrl:"https://picsum.photos/id/911/120/80"  },
+        { id:"e05", name:"Cosmos",     url:"https://picsum.photos/id/435/800/600",  thumbUrl:"https://picsum.photos/id/435/120/80"  },
+        { id:"e06", name:"Eclipse",    url:"https://picsum.photos/id/750/800/600",  thumbUrl:"https://picsum.photos/id/750/120/80"  },
+      ],
+    },
+    {
+      id: "abstrato", label: "Abstrato",
+      images: [
+        { id:"a01", name:"Mármore",   url:"https://picsum.photos/id/103/800/600",  thumbUrl:"https://picsum.photos/id/103/120/80"  },
+        { id:"a02", name:"Tinta",     url:"https://picsum.photos/id/137/800/600",  thumbUrl:"https://picsum.photos/id/137/120/80"  },
+        { id:"a03", name:"Ondas",     url:"https://picsum.photos/id/1/800/600",    thumbUrl:"https://picsum.photos/id/1/120/80"    },
+        { id:"a04", name:"Prisma",    url:"https://picsum.photos/id/237/800/600",  thumbUrl:"https://picsum.photos/id/237/120/80"  },
+        { id:"a05", name:"Geometria", url:"https://picsum.photos/id/1005/800/600", thumbUrl:"https://picsum.photos/id/1005/120/80" },
+        { id:"a06", name:"Fumaça",    url:"https://picsum.photos/id/177/800/600",  thumbUrl:"https://picsum.photos/id/177/120/80"  },
+      ],
+    },
+    /* Geek é injetada automaticamente via GEEK_IMAGES */
+  ];
+
+
+  /* =====================================================
+     DEMAIS DADOS
+  ===================================================== */
+  const FONTS = [
+    { name: "DM Sans",            label: "Sans"     },
+    { name: "Playfair Display",   label: "Playfair" },
+    { name: "Space Mono",         label: "Mono"     },
+    { name: "Cormorant Garamond", label: "Elegant"  },
+    { name: "Bebas Neue",         label: "Bebas"    },
+    { name: "Josefin Sans",       label: "Josefin"  },
+    { name: "Pacifico",           label: "Pacifico" },
+    { name: "Bitter",             label: "Bitter"   },
+    { name: "Rajdhani",           label: "Rajdhani" },
+    { name: "Archivo Black",      label: "Archivo"  },
+    { name: "IBM Plex Mono",      label: "IBM Mono" },
+    { name: "Cinzel",             label: "Cinzel"   },
+  ];
+
+  const INPUT_TO_CARD_ELEMENT = {
+    "f-icon": "cicon", "f-tag": "ctag",
+    "f-name": "cname", "f-title": "ctitle", "f-sub": "csub",
+  };
+
+  const LAYOUT_SIZES = {
+    wide:      { width: "420px", height: "265px" }, /* proporção mantida no tamanho aumentado */
+    square:    { width: "300px", height: "300px" },
+    tall:      { width: "265px", height: "420px" },
+  };
+
+
+  /* =====================================================
+     ESTADO
+  ===================================================== */
+  let activeBgSection = "cores";
+  let activeColorTab  = "classicas";
+  let activeImageTab  = "natureza";
+  let imageLoading    = false;
+
+
+  /* =====================================================
+     REFERÊNCIAS DOM
+  ===================================================== */
+  const cardEl           = document.getElementById("card");
+  const decoEl           = document.getElementById("deco");
+  const deco2El          = document.getElementById("deco2");
+  const colorRow         = document.getElementById("color-row");
+  const colorTabRow      = document.getElementById("color-tab-row");
+  const thumbGrid        = document.getElementById("thumb-grid");
+  const imgTabRow        = document.getElementById("img-tab-row");
+  const fontRow          = document.getElementById("font-row");
+  const overlaySlider    = document.getElementById("overlay-slider");
+  const overlayVal       = document.getElementById("overlay-val");
+  const loadingIndicator = document.getElementById("loading-indicator");
+  const dlBtn            = document.getElementById("dl-btn");
+
+
+  /* =====================================================
+     FUNÇÃO: setLoadingState(isLoading)
+  ===================================================== */
+  function setLoadingState(isLoading) {
+    imageLoading = isLoading;
+    loadingIndicator.classList.toggle("visible", isLoading);
+    dlBtn.disabled = isLoading;
+  }
+
+
+  /* =====================================================
+     FUNÇÃO: applyImageToCard(url)
+     Aplica a URL (local ou remota com CORS) ao card.
+     Imagens locais não têm CORS — funcionam direto.
+  ===================================================== */
+  function applyImageToCard(url) {
+    cardEl.style.backgroundImage = `url('${url}')`;
+    cardEl.style.backgroundColor = "#111";
+    cardEl.classList.add("mode-image");
+    const opacity = (overlaySlider.value / 100).toFixed(2);
+    cardEl.style.setProperty("--overlay-opacity", opacity);
+    document.getElementById("ctag").style.background = "rgba(255,255,255,0.2)";
+  }
+
+
+  /* =====================================================
+     FUNÇÃO: selectImage(img, thumbWrapEl)
+     Aplica imagem ao card. Imagens locais e Picsum não
+     precisam de proxy — são carregadas diretamente.
+  ===================================================== */
+  function selectImage(img, thumbWrapEl) {
+    thumbGrid.querySelectorAll(".thumb-wrap")
+      .forEach(w => w.classList.remove("active"));
+    thumbWrapEl.classList.add("active");
+    applyImageToCard(img.url);
+  }
+
+
+  /* =====================================================
+     FUNÇÕES — CORES
+  ===================================================== */
+  function applyColorPalette(palette) {
+    cardEl.style.backgroundImage = "none";
+    cardEl.style.backgroundColor = palette.bg;
+    cardEl.style.setProperty("--overlay-opacity", "0");
+    cardEl.classList.remove("mode-image");
+    decoEl.style.background  = palette.d;
+    deco2El.style.background = palette.d2;
+    document.getElementById("ctag").style.background = "rgba(255,255,255,0.15)";
+  }
+
+  function renderColorSwatches(categoryId) {
+    colorRow.innerHTML = "";
+    const category = PALETTE_CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return;
+    category.palettes.forEach((palette, index) => {
+      const wrap   = document.createElement("div");
+      wrap.className = "swatch-wrap";
+      const tip    = document.createElement("span");
+      tip.className   = "swatch-tip";
+      tip.textContent = palette.name;
+      const swatch = document.createElement("div");
+      swatch.className        = "color-swatch" + (index === 0 ? " active" : "");
+      swatch.style.background = palette.bg;
+      swatch.addEventListener("click", () => {
+        colorRow.querySelectorAll(".color-swatch")
+          .forEach(s => s.classList.remove("active"));
+        swatch.classList.add("active");
+        applyColorPalette(palette);
+      });
+      wrap.appendChild(tip);
+      wrap.appendChild(swatch);
+      colorRow.appendChild(wrap);
+    });
+    applyColorPalette(category.palettes[0]);
+  }
+
+  function buildColorTabs() {
+    PALETTE_CATEGORIES.forEach(category => {
+      const btn = document.createElement("button");
+      btn.className   = "tab-btn" + (category.id === activeColorTab ? " active" : "");
+      btn.textContent = category.label;
+      btn.addEventListener("click", () => {
+        activeColorTab = category.id;
+        colorTabRow.querySelectorAll(".tab-btn")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderColorSwatches(category.id);
+      });
+      colorTabRow.appendChild(btn);
+    });
+  }
+
+
+  /* =====================================================
+     FUNÇÕES — IMAGENS
+  ===================================================== */
+  function getAllImageCategories() {
+    return [
+      ...IMAGE_CATEGORIES,
+      { id: "geek", label: "Mundo Geek", images: GEEK_IMAGES },
+    ];
+  }
+
+  function renderThumbs(categoryId) {
+    thumbGrid.innerHTML = "";
+    const category = getAllImageCategories().find(c => c.id === categoryId);
+    if (!category) return;
+    category.images.forEach((img, index) => {
+      const wrap  = document.createElement("div");
+      wrap.className = "thumb-wrap" + (index === 0 ? " active" : "");
+      const thumb = document.createElement("div");
+      thumb.className = "thumb-img";
+      thumb.style.backgroundImage = `url('${img.thumbUrl}')`;
+      const label = document.createElement("div");
+      label.className   = "thumb-label";
+      label.textContent = img.name;
+      wrap.addEventListener("click", () => selectImage(img, wrap));
+      wrap.appendChild(thumb);
+      wrap.appendChild(label);
+      thumbGrid.appendChild(wrap);
+    });
+    selectImage(category.images[0], thumbGrid.querySelector(".thumb-wrap"));
+  }
+
+  function buildImageTabs() {
+    getAllImageCategories().forEach(category => {
+      const btn = document.createElement("button");
+      btn.className   = "tab-btn" + (category.id === activeImageTab ? " active" : "");
+      btn.textContent = category.label;
+      btn.addEventListener("click", () => {
+        activeImageTab = category.id;
+        imgTabRow.querySelectorAll(".tab-btn")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderThumbs(category.id);
+      });
+      imgTabRow.appendChild(btn);
+    });
+  }
+
+  function bindOverlaySlider() {
+    overlaySlider.addEventListener("input", () => {
+      const opacity = (overlaySlider.value / 100).toFixed(2);
+      cardEl.style.setProperty("--overlay-opacity", opacity);
+      overlayVal.textContent = `${overlaySlider.value}%`;
+    });
+  }
+
+
+  /* =====================================================
+     ALTERNAR SEÇÃO DE FUNDO
+  ===================================================== */
+  function switchBgSection(sectionId, btnClicked) {
+    activeBgSection = sectionId;
+    document.querySelectorAll(".bg-section-btn")
+      .forEach(b => b.classList.remove("active"));
+    btnClicked.classList.add("active");
+    document.querySelectorAll(".bg-section")
+      .forEach(s => s.classList.remove("visible"));
+    document.getElementById(`section-${sectionId}`).classList.add("visible");
+    if (sectionId === "cores") {
+      renderColorSwatches(activeColorTab);
+    } else {
+      renderThumbs(activeImageTab);
+    }
+  }
+
+
+  /* =====================================================
+     DEMAIS FUNÇÕES
+  ===================================================== */
+  function buildFontRow() {
+    FONTS.forEach(font => {
+      const btn = document.createElement("div");
+      btn.className        = "font-btn" + (font.name === "DM Sans" ? " active" : "");
+      btn.style.fontFamily = font.name;
+      btn.textContent      = font.label;
+      btn.title            = font.name;
+      btn.addEventListener("click", () => {
+        fontRow.querySelectorAll(".font-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        cardEl.style.fontFamily = font.name;
+      });
+      fontRow.appendChild(btn);
+    });
+  }
+
+  function bindInputs() {
+    Object.entries(INPUT_TO_CARD_ELEMENT).forEach(([inputId, cardElId]) => {
+      const inputEl  = document.getElementById(inputId);
+      const targetEl = document.getElementById(cardElId);
+      inputEl.addEventListener("input", () => {
+        targetEl.textContent = inputEl.value;
+      });
+    });
+  }
+
+  function setLayout(type, btnClicked) {
+    document.querySelectorAll(".layout-btn").forEach(b => b.classList.remove("active"));
+    btnClicked.classList.add("active");
+    const size = LAYOUT_SIZES[type];
+    if (size) { cardEl.style.width = size.width; cardEl.style.height = size.height; }
+  }
+
+  /*
+    Download:
+      - Imagens locais (./imagens/...): sem CORS, html2canvas captura direto
+      - Imagens Picsum: CORS habilitado, useCORS:true resolve
+  */
+  function downloadCard() {
+    if (imageLoading) return;
+    html2canvas(cardEl, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,   /* necessário para imagens locais */
+      backgroundColor: null,
+      imageTimeout: 10000,
+    }).then(canvas => {
+      const link    = document.createElement("a");
+      link.download = "meu-card.png";
+      link.href     = canvas.toDataURL("image/png");
+      link.click();
+    });
+  }
+
+
+  /* =====================================================
+     INICIALIZAÇÃO
+  ===================================================== */
+  buildColorTabs();
+  renderColorSwatches(activeColorTab);
+  buildImageTabs();
+  buildFontRow();
+  bindInputs();
+  bindOverlaySlider();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "DM Sans", sans-serif;
+  background: #f0f0f0;
+  color: #111;
+}
+
+/* =====================================================
+       LAYOUT PRINCIPAL
+       A página ocupa exatamente a altura da viewport.
+       O grid divide em: preview (esquerda) + sidebar (direita)
+    ===================================================== */
+.wrap {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 0;
+  height: 100vh;
+  overflow: hidden; /* evita scroll da página */
+}
+
+/* =====================================================
+       COLUNA ESQUERDA — preview do card
+       Fundo escuro para contraste. Card centralizado e grande.
+    ===================================================== */
+.preview-area {
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px;
+  position: relative;
+}
+
+/* Grade de pontos decorativa no fundo do preview */
+.preview-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #333 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.preview-label {
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+/* =====================================================
+       CARD — elemento exportado como imagem
+    ===================================================== */
+#card {
+  /* Tamanho base aumentado em relação ao original */
+  width: 420px;
+  height: 265px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    width 0.35s ease,
+    height 0.35s ease;
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a2e;
+  /* Sombra pronunciada para destacar no fundo escuro */
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* Overlay escuro controlado por --overlay-opacity */
+#card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--overlay-opacity, 0));
+  border-radius: inherit;
+  z-index: 0;
+  transition: background 0.3s ease;
+}
+
+#card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#card .deco {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  opacity: 0.15;
+  top: -50px;
+  right: -50px;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+#card .deco2 {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  opacity: 0.1;
+  bottom: -40px;
+  left: 24px;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+#card.mode-image .deco,
+#card.mode-image .deco2 {
+  opacity: 0;
+}
+
+#card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+#card .card-icon {
+  font-size: 20px;
+}
+#card .card-tag {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  opacity: 0.75;
+}
+#card .card-name {
+  font-size: 14px;
+  opacity: 0.75;
+  margin-bottom: 5px;
+}
+#card .card-title {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+#card .card-sub {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 7px;
+}
+
+/* =====================================================
+       COLUNA DIREITA — sidebar com scroll interno
+       Altura total da viewport. Overflow-y: auto para scroll
+       interno sem afetar a página.
+    ===================================================== */
+.sidebar {
+  background: #fff;
+  border-left: 0.5px solid #e0e0e0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Scrollbar discreta na sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* =====================================================
+       PAINÉIS DA SIDEBAR
+       Separados por borda, sem border-radius (fica dentro da sidebar)
+    ===================================================== */
+.panel {
+  padding: 16px 20px;
+  border-bottom: 0.5px solid #ebebeb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Seções Cores / Imagens */
+.bg-section-tabs {
+  display: flex;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bg-section-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: #f9f9f9;
+  color: #888;
+  transition: all 0.15s;
+}
+.bg-section-btn:first-child {
+  border-right: 0.5px solid #e0e0e0;
+}
+.bg-section-btn.active {
+  background: #111;
+  color: #fff;
+}
+
+.bg-section {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+.bg-section.visible {
+  display: flex;
+}
+
+/* Abas de categoria */
+.tab-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 0.5px solid #ddd;
+  background: #f5f5f5;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab-btn:hover {
+  background: #ebebeb;
+  color: #555;
+}
+.tab-btn.active {
+  border-color: #111;
+  color: #111;
+  background: #fff;
+  font-weight: 600;
+}
+
+/* Swatches */
+.color-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.swatch-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.color-swatch:hover {
+  transform: scale(1.18);
+}
+.color-swatch.active {
+  border-color: #111;
+}
+.swatch-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.swatch-wrap:hover .swatch-tip {
+  opacity: 1;
+}
+
+/* Grid de thumbnails */
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.thumb-wrap {
+  position: relative;
+  aspect-ratio: 3/2;
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.thumb-wrap:hover {
+  transform: scale(1.05);
+}
+.thumb-wrap.active {
+  border-color: #111;
+}
+.thumb-wrap.loading .thumb-img {
+  opacity: 0.35;
+}
+.thumb-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+.thumb-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  color: #fff;
+  font-size: 8px;
+  padding: 8px 3px 3px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Slider overlay */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slider-row label {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: #111;
+  cursor: pointer;
+}
+.slider-val {
+  font-size: 11px;
+  color: #555;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* Fontes */
+.font-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.font-btn {
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 0.5px solid #ddd;
+  background: #f5f5f5;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.font-btn:hover {
+  background: #ebebeb;
+}
+.font-btn.active {
+  border-color: #111;
+  background: #fff;
+  font-weight: 500;
+}
+
+/* Proporção */
+.layout-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.layout-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: center;
+  border: 0.5px solid #ddd;
+  background: #f5f5f5;
+  color: #888;
+  font-size: 10px;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.layout-btn.active {
+  border-color: #111;
+  color: #111;
+  background: #fff;
+  font-weight: 600;
+}
+
+/* Campos de texto */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.field label {
+  font-size: 11px;
+  color: #888;
+}
+.field input[type="text"] {
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 0.5px solid #ddd;
+  background: #f9f9f9;
+  color: #111;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input[type="text"]:focus {
+  border-color: #888;
+}
+
+/* Indicador de loading */
+.loading-indicator {
+  display: none;
+  font-size: 11px;
+  color: #888;
+  align-items: center;
+  gap: 6px;
+}
+.loading-indicator.visible {
+  display: flex;
+}
+.spinner {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #ddd;
+  border-top-color: #666;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botão de download — fixo no fundo da sidebar */
+.dl-wrap {
+  padding: 16px 20px;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border-top: 0.5px solid #ebebeb;
+  margin-top: auto;
+}
+
+.dl-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.dl-btn:hover {
+  opacity: 0.8;
+}
+.dl-btn:active {
+  opacity: 0.6;
+}
+.dl-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
